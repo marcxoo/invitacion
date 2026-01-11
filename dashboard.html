@@ -108,24 +108,24 @@
         const KEY_NO = 'asistencia_no';
 
         async function fetchCounts() {
-            document.getElementById('count-yes').innerText = '...';
-            document.getElementById('count-no').innerText = '...';
+            // Helper to secure fetch
+            const getCount = async (key) => {
+                try {
+                    const res = await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${key}`);
+                    if (!res.ok) return 0; // If key doesn't exist (404), return 0
+                    const data = await res.json();
+                    return data.count || 0;
+                } catch (e) {
+                    console.warn("Error fetching " + key, e);
+                    return 0; // Network error fallback
+                }
+            };
 
-            try {
-                // Fetch YES
-                const resYes = await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${KEY_YES}`);
-                const dataYes = await resYes.json();
-                document.getElementById('count-yes').innerText = dataYes.count || 0;
+            const yes = await getCount(KEY_YES);
+            const no = await getCount(KEY_NO);
 
-                // Fetch NO
-                const resNo = await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${KEY_NO}`);
-                const dataNo = await resNo.json();
-                document.getElementById('count-no').innerText = dataNo.count || 0;
-
-            } catch (error) {
-                console.error("Error fetching data", error);
-                alert("Error conectando con los servicios de Lady Whistledown.");
-            }
+            document.getElementById('count-yes').innerText = yes;
+            document.getElementById('count-no').innerText = no;
         }
 
         // Load on start
