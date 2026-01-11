@@ -176,18 +176,61 @@
                     debugPanel.style.bottom = '0';
                     debugPanel.style.left = '0';
                     debugPanel.style.width = '100%';
-                    debugPanel.style.background = 'rgba(0,0,0,0.8)';
+                    debugPanel.style.background = 'rgba(0,0,0,0.9)';
                     debugPanel.style.color = '#fff';
-                    debugPanel.style.padding = '10px';
-                    debugPanel.style.fontFamily = 'monospace';
+                    debugPanel.style.padding = '15px';
+                    debugPanel.style.fontFamily = 'sans-serif';
                     debugPanel.style.zIndex = '9999';
-                    debugPanel.innerHTML = '<p style="margin:0; text-align:center;">MODO CALIBRACIÓN: Arrastra los círculos.<br>Locación: <span id="pos-loc">--</span> | Confirmar: <span id="pos-conf">--</span></p>';
+                    debugPanel.style.display = 'flex';
+                    debugPanel.style.flexDirection = 'column';
+                    debugPanel.style.gap = '10px';
+
+                    debugPanel.innerHTML = `
+                        <div style="text-align:center; font-size:14px; margin-bottom:5px;">
+                            <strong>MODO CALIBRACIÓN</strong><br>
+                            1. Arrastra los círculos a su sitio.<br>
+                            2. Usa los botones para ajustar tamaño.
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>Tamaño:</span>
+                            <button id="btn-dec" style="padding:10px 20px; font-size:18px;">-</button>
+                            <span id="size-display">100%</span>
+                            <button id="btn-inc" style="padding:10px 20px; font-size:18px;">+</button>
+                        </div>
+                        <div style="font-size:12px; margin-top:5px; color:#aaa; text-align:center;">
+                            Loc: <span id="pos-loc">--</span><br>
+                            Conf: <span id="pos-conf">--</span><br>
+                            Scale: <span id="val-scale">1.0</span>
+                        </div>
+                    `;
                     document.body.appendChild(debugPanel);
+
+                    let currentScale = 1.0;
+
+                    document.getElementById('btn-inc').onclick = () => {
+                        currentScale += 0.05;
+                        updateScale();
+                    };
+                    document.getElementById('btn-dec').onclick = () => {
+                        if (currentScale > 0.1) currentScale -= 0.05;
+                        updateScale();
+                    };
+
+                    function updateScale() {
+                        document.getElementById('size-display').innerText = Math.round(currentScale * 100) + '%';
+                        document.getElementById('val-scale').innerText = currentScale.toFixed(2);
+
+                        // Apply to buttons
+                        const els = document.querySelectorAll('.interactive-btn');
+                        els.forEach(el => {
+                            el.style.transform = `scale(${currentScale})`;
+                        });
+                    }
 
                     function makeDraggable(element, labelId) {
                         let isDragging = false;
+                        let startX, startY;
 
-                        // Prevent default touch actions (scrolling) ONLY on the element
                         element.style.touchAction = 'none';
 
                         const onMove = (clientX, clientY) => {
@@ -195,26 +238,32 @@
 
                             const containerRect = overlayDiv.getBoundingClientRect();
 
-                            // Calculate % position
+                            // Calculate center position in %
                             let left = ((clientX - containerRect.left) / containerRect.width) * 100;
                             let top = ((clientY - containerRect.top) / containerRect.height) * 100;
 
-                            // Center anchor
-                            const w = parseFloat(element.style.width);
-                            const h = parseFloat(element.style.height);
-                            left = left - (w / 2);
-                            top = top - (h / 2);
+                            // Adjust for element size is tricky with scaling.
+                            // Better to just set the center position directly and use transform translate?
+                            // For now, simple offset math:
+                            // We aren't changing width/height, just scale. So bounding box is same?
+                            // Actually visual center is what matters.
 
-                            element.style.left = left.toFixed(1) + '%';
-                            element.style.top = top.toFixed(1) + '%';
+                            // Simplified centering:
+                            // The element is usually width: 25%, height: 10%.
+                            // We want 'left' to be the center of the element.
+                            const w = 25; // approx
+                            const h = 14; // approx
 
-                            document.getElementById(labelId).innerText = `Top:${element.style.top} Left:${element.style.left}`;
+                            element.style.left = (left - w / 2).toFixed(1) + '%';
+                            element.style.top = (top - h / 2).toFixed(1) + '%';
+
+                            document.getElementById(labelId).innerText = `T:${element.style.top} L:${element.style.left}`;
                         };
 
-                        // Touch Events
+                        // Touch
                         element.addEventListener('touchstart', (e) => {
                             isDragging = true;
-                            e.preventDefault(); // Stop scroll
+                            e.preventDefault();
                         }, { passive: false });
 
                         document.addEventListener('touchmove', (e) => {
@@ -223,7 +272,7 @@
 
                         document.addEventListener('touchend', () => { isDragging = false; });
 
-                        // Mouse Events (for desktop testing)
+                        // Mouse
                         element.addEventListener('mousedown', (e) => { isDragging = true; });
                         document.addEventListener('mousemove', (e) => {
                             if (isDragging) onMove(e.clientX, e.clientY);
@@ -232,37 +281,42 @@
                     }
 
                     // --- BUTTON 1: LOCATION (Left) ---
-                    const btnLocation = document.createElement('div'); // Div for dragging
+                    const btnLocation = document.createElement('div');
                     btnLocation.className = 'interactive-btn';
                     btnLocation.style.top = '71%';
                     btnLocation.style.left = '18%';
-                    btnLocation.style.width = '26%';
-                    btnLocation.style.height = '10%';
-                    btnLocation.style.backgroundColor = 'rgba(255, 0, 0, 0.5)'; // More visible
+                    btnLocation.style.width = '25%'; // Square-ish base size?
+                    btnLocation.style.height = '14%'; // roughly square on phone screen aspect ratio
+                    btnLocation.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
+                    btnLocation.style.borderRadius = '50%'; // CIRCLE
                     btnLocation.innerText = '1';
                     btnLocation.style.display = 'flex';
                     btnLocation.style.justifyContent = 'center';
                     btnLocation.style.alignItems = 'center';
                     btnLocation.style.color = 'white';
                     btnLocation.style.fontWeight = 'bold';
+                    // Center transform origin for scaling
+                    btnLocation.style.transformOrigin = 'center center';
                     overlayDiv.appendChild(btnLocation);
 
                     makeDraggable(btnLocation, 'pos-loc');
 
                     // --- BUTTON 2: CONFIRMATION (Right) ---
-                    const btnConfirm = document.createElement('div'); // Div for dragging
+                    const btnConfirm = document.createElement('div');
                     btnConfirm.className = 'interactive-btn';
                     btnConfirm.style.top = '80%';
                     btnConfirm.style.left = '52%';
-                    btnConfirm.style.width = '26%';
-                    btnConfirm.style.height = '10%';
+                    btnConfirm.style.width = '25%';
+                    btnConfirm.style.height = '14%';
                     btnConfirm.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
+                    btnConfirm.style.borderRadius = '50%'; // CIRCLE
                     btnConfirm.innerText = '2';
                     btnConfirm.style.display = 'flex';
                     btnConfirm.style.justifyContent = 'center';
                     btnConfirm.style.alignItems = 'center';
                     btnConfirm.style.color = 'white';
                     btnConfirm.style.fontWeight = 'bold';
+                    btnConfirm.style.transformOrigin = 'center center';
                     overlayDiv.appendChild(btnConfirm);
 
                     makeDraggable(btnConfirm, 'pos-conf');
