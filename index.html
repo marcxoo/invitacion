@@ -170,33 +170,102 @@
                     overlayDiv.style.zIndex = '50'; // On top of canvas
                     div.appendChild(overlayDiv);
 
-                    // --- BUTTON 1: LOCATION (Left, Higher) ---
-                    const btnLocation = document.createElement('a');
-                    btnLocation.href = 'https://maps.app.goo.gl/4hYAJJ7P2VfVS9uR6';
+                    // --- CALIBRATION INTERFACE ---
+                    const debugPanel = document.createElement('div');
+                    debugPanel.style.position = 'fixed';
+                    debugPanel.style.bottom = '0';
+                    debugPanel.style.left = '0';
+                    debugPanel.style.width = '100%';
+                    debugPanel.style.background = 'rgba(0,0,0,0.8)';
+                    debugPanel.style.color = '#fff';
+                    debugPanel.style.padding = '10px';
+                    debugPanel.style.fontFamily = 'monospace';
+                    debugPanel.style.zIndex = '9999';
+                    debugPanel.innerHTML = '<p style="margin:0; text-align:center;">MODO CALIBRACIÓN: Arrastra los círculos.<br>Locación: <span id="pos-loc">--</span> | Confirmar: <span id="pos-conf">--</span></p>';
+                    document.body.appendChild(debugPanel);
+
+                    function makeDraggable(element, labelId) {
+                        let isDragging = false;
+
+                        // Prevent default touch actions (scrolling) ONLY on the element
+                        element.style.touchAction = 'none';
+
+                        const onMove = (clientX, clientY) => {
+                            if (!isDragging) return;
+
+                            const containerRect = overlayDiv.getBoundingClientRect();
+
+                            // Calculate % position
+                            let left = ((clientX - containerRect.left) / containerRect.width) * 100;
+                            let top = ((clientY - containerRect.top) / containerRect.height) * 100;
+
+                            // Center anchor
+                            const w = parseFloat(element.style.width);
+                            const h = parseFloat(element.style.height);
+                            left = left - (w / 2);
+                            top = top - (h / 2);
+
+                            element.style.left = left.toFixed(1) + '%';
+                            element.style.top = top.toFixed(1) + '%';
+
+                            document.getElementById(labelId).innerText = `Top:${element.style.top} Left:${element.style.left}`;
+                        };
+
+                        // Touch Events
+                        element.addEventListener('touchstart', (e) => {
+                            isDragging = true;
+                            e.preventDefault(); // Stop scroll
+                        }, { passive: false });
+
+                        document.addEventListener('touchmove', (e) => {
+                            if (isDragging) onMove(e.touches[0].clientX, e.touches[0].clientY);
+                        }, { passive: false });
+
+                        document.addEventListener('touchend', () => { isDragging = false; });
+
+                        // Mouse Events (for desktop testing)
+                        element.addEventListener('mousedown', (e) => { isDragging = true; });
+                        document.addEventListener('mousemove', (e) => {
+                            if (isDragging) onMove(e.clientX, e.clientY);
+                        });
+                        document.addEventListener('mouseup', () => { isDragging = false; });
+                    }
+
+                    // --- BUTTON 1: LOCATION (Left) ---
+                    const btnLocation = document.createElement('div'); // Div for dragging
                     btnLocation.className = 'interactive-btn';
-                    // Correction: 66% was too high (on text). Moving DOWN to 71%.
                     btnLocation.style.top = '71%';
                     btnLocation.style.left = '18%';
                     btnLocation.style.width = '26%';
-                    btnLocation.style.height = '10%'; // Reduced height for precision
+                    btnLocation.style.height = '10%';
+                    btnLocation.style.backgroundColor = 'rgba(255, 0, 0, 0.5)'; // More visible
+                    btnLocation.innerText = '1';
+                    btnLocation.style.display = 'flex';
+                    btnLocation.style.justifyContent = 'center';
+                    btnLocation.style.alignItems = 'center';
+                    btnLocation.style.color = 'white';
+                    btnLocation.style.fontWeight = 'bold';
                     overlayDiv.appendChild(btnLocation);
 
-                    // --- BUTTON 2: CONFIRMATION (Right, Lower) ---
-                    const btnConfirm = document.createElement('a');
-                    btnConfirm.href = '#';
+                    makeDraggable(btnLocation, 'pos-loc');
+
+                    // --- BUTTON 2: CONFIRMATION (Right) ---
+                    const btnConfirm = document.createElement('div'); // Div for dragging
                     btnConfirm.className = 'interactive-btn';
-                    // Correction: 75% was too high. Moving DOWN to 80%.
                     btnConfirm.style.top = '80%';
                     btnConfirm.style.left = '52%';
                     btnConfirm.style.width = '26%';
-                    btnConfirm.style.height = '10%'; // Reduced height
-                    btnConfirm.onclick = (e) => {
-                        if (btnConfirm.getAttribute('href') === '#') {
-                            e.preventDefault();
-                            alert("⚠️ Necesito el link de Confirmar Asistencia para activar este botón.");
-                        }
-                    };
+                    btnConfirm.style.height = '10%';
+                    btnConfirm.style.backgroundColor = 'rgba(255, 0, 0, 0.5)';
+                    btnConfirm.innerText = '2';
+                    btnConfirm.style.display = 'flex';
+                    btnConfirm.style.justifyContent = 'center';
+                    btnConfirm.style.alignItems = 'center';
+                    btnConfirm.style.color = 'white';
+                    btnConfirm.style.fontWeight = 'bold';
                     overlayDiv.appendChild(btnConfirm);
+
+                    makeDraggable(btnConfirm, 'pos-conf');
                 }
             } catch (error) {
                 console.error('Error:', error);
