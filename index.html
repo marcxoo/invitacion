@@ -197,9 +197,12 @@
 
                             // Force click behavior for iOS
                             link.addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                // Let default happen, but log it
-                                console.log('Click en:', cleanUrl);
+                                // e.stopPropagation(); // Don't stop propagation, let browser handle it too?
+
+                                // DEBUG ALLERT
+                                alert('Intentando abrir: ' + cleanUrl);
+
+                                // Let default happen
                             });
 
                             // Handled touch separately just in case
