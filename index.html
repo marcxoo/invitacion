@@ -142,13 +142,39 @@
                     annotationDiv.className = 'annotationLayer';
                     div.appendChild(annotationDiv);
 
-                    pdfjsLib.AnnotationLayer.render({
-                        viewport: viewport.clone({ dontFlip: true }),
-                        div: annotationDiv,
-                        annotations: await page.getAnnotations(),
-                        page: page,
-                        linkService: null, // Basic links work without full service
-                        renderInteractiveForms: true
+                    // Manual Link Extraction (More reliable)
+                    const annotations = await page.getAnnotations();
+
+                    annotations.forEach(annotation => {
+                        // Check for external links
+                        if (annotation.subtype === 'Link' && annotation.url) {
+                            const link = document.createElement('a');
+                            link.href = annotation.url;
+                            link.target = '_blank';
+
+                            // Convert PDF coordinates to HTML coordinates
+                            // geometry: [x_min, y_min, x_max, y_max]
+                            const rect = viewport.convertToViewportRectangle(annotation.rect);
+
+                            // Normalize coordinates (sometimes inverted)
+                            const x = Math.min(rect[0], rect[2]);
+                            const y = Math.min(rect[1], rect[3]);
+                            const width = Math.abs(rect[0] - rect[2]);
+                            const height = Math.abs(rect[1] - rect[3]);
+
+                            link.style.left = `${x}px`;
+                            link.style.top = `${y}px`;
+                            link.style.width = `${width}px`;
+                            link.style.height = `${height}px`;
+
+                            // Styling to ensure it's clickable but invisible
+                            link.style.position = 'absolute';
+                            link.style.display = 'block';
+                            link.style.zIndex = '10';
+                            link.style.cursor = 'pointer';
+
+                            annotationDiv.appendChild(link);
+                        }
                     });
                 }
             } catch (error) {
