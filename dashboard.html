@@ -187,13 +187,13 @@
 
         function resetMyDevice() {
             localStorage.removeItem('voted_luisana_15');
-            alert("✅ Dispositivo liberado.\n\nAhora puedes volver a la invitación y votar de nuevo.\n(Nota: Esto solo afecta a TU celular)");
+            alert("✅ Dispositivo liberado.\n\nAhora puedes volver a la invitación y confirmar tu asistencia de nuevo.\n(Nota: Esto solo afecta a TU celular)");
         }
 
         function copyResetLink() {
             const link = "https://invitacion-luisana-gm.vercel.app/?action=reset";
             navigator.clipboard.writeText(link).then(() => {
-                alert("📋 ENLACE COPIADO:\n" + link + "\n\nEnvíale este link a la persona que se equivocó.\nAl abrirlo, su celular se 'arreglará' y podrá votar de nuevo.");
+                alert("📋 ENLACE COPIADO:\n" + link + "\n\nEnvíale este link a la persona que se equivocó.\nAl abrirlo, su celular se 'arreglará' y podrá confirmar su asistencia de nuevo.");
             });
         }
 
