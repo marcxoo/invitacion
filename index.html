@@ -149,7 +149,7 @@
         async function renderPDF() {
             try {
                 const pdf = await pdfjsLib.getDocument(url).promise;
-                document.getElementById('loader').style.display = 'none';
+
                 const wrapper = document.getElementById('pdf-wrapper');
 
                 for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
@@ -247,6 +247,10 @@
                     };
                     overlayDiv.appendChild(btnConfirm);
                 }
+
+                // Hide loader ONLY after all pages are rendered
+                document.getElementById('loader').style.display = 'none';
+
             } catch (error) {
                 console.error('Error:', error);
                 document.getElementById('loader').innerHTML = '<p>Error al cargar. Intente recargar.</p>';
