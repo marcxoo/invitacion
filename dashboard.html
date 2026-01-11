@@ -136,8 +136,42 @@
             document.getElementById('count-no').innerText = no;
         }
 
-        function requestReset() {
-            alert("⚠️ PROTECCIÓN DE SEGURIDAD\n\nLos contadores no pueden borrarse desde aquí para evitar accidentes durante el evento.\n\nPara realizar el 'Reseteo Final' a 0 antes de enviar las invitaciones, solicita al soporte técnico que actualice la base de datos.");
+        async function requestReset() {
+            const password = prompt("🔐 INGRESE CLAVE DE ADMINISTRADOR:", "");
+            if (password !== "luisana15") { // Simple hardcoded password
+                if (password !== null) alert("⛔ Clave incorrecta.");
+                return;
+            }
+
+            if (!confirm("⚠️ ¿Vaciar TODOS los contadores a 0?\nEsta acción es irreversible.")) return;
+
+            const btn = document.querySelector('button[onclick="requestReset()"]');
+            btn.innerText = "⏳ Reseteando...";
+            btn.disabled = true;
+
+            try {
+                // Hack: API doesn't support set=0, so we set to 1 then down to 0
+                await Promise.all([
+                    // Reset YES
+                    fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${KEY_YES}/set?count=1`).then(() =>
+                        fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${KEY_YES}/down`)
+                    ),
+                    // Reset NO
+                    fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${KEY_NO}/set?count=1`).then(() =>
+                        fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${KEY_NO}/down`)
+                    )
+                ]);
+
+                alert("✅ Contadores reiniciados a 0.");
+                fetchCounts();
+
+            } catch (e) {
+                console.error(e);
+                alert("Error al resetear. Intente nuevamente.");
+            } finally {
+                btn.innerText = "⚠ Reiniciar Contadores";
+                btn.disabled = false;
+            }
         }
 
         // Load on start
