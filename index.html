@@ -160,12 +160,20 @@
 
                         if (isLink) {
                             const link = document.createElement('a');
-                            link.href = annotation.url;
+
+                            // Ensure URL has protocol
+                            let cleanUrl = annotation.url;
+                            if (!cleanUrl.startsWith('http')) {
+                                cleanUrl = 'https://' + cleanUrl;
+                            }
+                            link.href = cleanUrl;
+
+                            // Force new tab
                             link.target = '_blank';
+                            link.rel = 'noopener noreferrer';
 
                             // Convert PDF coordinates to HTML coordinates
                             const rect = viewport.convertToViewportRectangle(annotation.rect);
-
                             const x = Math.min(rect[0], rect[2]);
                             const y = Math.min(rect[1], rect[3]);
                             const width = Math.abs(rect[0] - rect[2]);
@@ -176,15 +184,29 @@
                             link.style.width = `${width}px`;
                             link.style.height = `${height}px`;
 
-                            // DEBUG STYLES: Invisible again
+                            // Invisible but interactable
                             link.style.position = 'absolute';
                             link.style.display = 'block';
-                            link.style.zIndex = '100';
-                            // link.style.border = '2px solid red'; 
-                            // link.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
+                            link.style.zIndex = '1000'; // Super high z-index
                             link.style.cursor = 'pointer';
-                            // tap highlight color for mobile
-                            link.style.webkitTapHighlightColor = 'rgba(0,0,0,0.1)';
+                            // link.style.border = '1px solid rgba(0,255,0,0.2)'; // Debug hint
+
+                            // Mobile optimization
+                            link.style.webkitTapHighlightColor = 'rgba(0,0,0,0.2)';
+                            link.style.touchAction = 'manipulation';
+
+                            // Force click behavior for iOS
+                            link.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                // Let default happen, but log it
+                                console.log('Click en:', cleanUrl);
+                            });
+
+                            // Handled touch separately just in case
+                            link.addEventListener('touchend', (e) => {
+                                // Don't prevent default, allow the click to fire
+                                e.stopPropagation();
+                            });
 
                             annotationDiv.appendChild(link);
                         }
