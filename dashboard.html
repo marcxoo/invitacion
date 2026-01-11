@@ -103,8 +103,13 @@
 
     <div style="margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; width: 100%; max-width: 400px;">
         <button onclick="requestReset()"
-            style="background: transparent; border: 1px solid #999; color: #777; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
-            ⚠ Reiniciar Contadores
+            style="background: transparent; border: 1px solid #999; color: #777; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; margin-bottom: 15px; display: block; width: 100%;">
+            ⚠ Reiniciar Contadores (Clave)
+        </button>
+
+        <button onclick="resetMyDevice()"
+            style="background: #eef; border: 1px solid #aac; color: #44a; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; width: 100%;">
+            📱 Olvidar mi voto (En este celular)
         </button>
     </div>
 
@@ -172,6 +177,11 @@
                 btn.innerText = "⚠ Reiniciar Contadores";
                 btn.disabled = false;
             }
+        }
+
+        function resetMyDevice() {
+            localStorage.removeItem('voted_luisana_15');
+            alert("✅ Dispositivo liberado.\n\nAhora puedes volver a la invitación y votar de nuevo.\n(Nota: Esto solo afecta a TU celular)");
         }
 
         // Load on start

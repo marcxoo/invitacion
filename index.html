@@ -143,11 +143,7 @@
 
     <div id="pdf-wrapper"></div>
 
-    <!-- Dev Button: Remove before final send -->
-    <button onclick="resetMyDevice()"
-        style="position: fixed; bottom: 10px; left: 10px; z-index: 9999; background: #eee; border: 1px solid #ccc; font-size: 10px; padding: 5px; opacity: 0.7;">
-        🔄 Reset Device (Admin)
-    </button>
+
 
     <script>
         const url = 'inviteeee222__compressed.pdf';
@@ -280,12 +276,7 @@
             return localStorage.getItem('voted_luisana_15');
         }
 
-        function resetMyDevice() {
-            if (confirm("¿Borrar tu memoria de voto para probar de nuevo?")) {
-                localStorage.removeItem('voted_luisana_15');
-                location.reload();
-            }
-        }
+
 
         function showRsvpModal() {
             if (checkVoted()) {
