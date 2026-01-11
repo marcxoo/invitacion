@@ -112,7 +112,7 @@
             const getCount = async (key) => {
                 try {
                     // Add timestamp to prevent browser caching
-                    const res = await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${key}?t=${Date.now()}`);
+                    const res = await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${key}/?t=${Date.now()}`);
                     if (!res.ok) return 0; // If key doesn't exist (404), return 0
                     const data = await res.json();
                     return data.count || 0;
