@@ -36,6 +36,22 @@
         }
 
         /* Critical for interactivity: layers must match canvas size */
+        .page-container {
+            position: relative;
+        }
+
+        .interactive-btn {
+            position: absolute;
+            background-color: rgba(255, 0, 0, 0.3);
+            /* RED DEBUG VISIBILITY */
+            border: 2px solid red;
+            border-radius: 50%;
+            /* Circle hint */
+            z-index: 100 !important;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         .textLayer,
         .annotationLayer {
             position: absolute;
@@ -45,6 +61,8 @@
             bottom: 0;
             overflow: hidden;
             line-height: 1.0;
+            display: none !important;
+            /* Disable original layers */
         }
 
         /* Make links clickable */
@@ -137,91 +155,48 @@
                     };
                     await page.render(renderContext).promise;
 
-                    // 2. Render Annotation Layer (The interactions/links)
-                    const annotationDiv = document.createElement('div');
-                    annotationDiv.className = 'annotationLayer';
-                    div.appendChild(annotationDiv);
+                    /**
+                     * MANUAL OVERLAY SYSTEM
+                     * We ignore PDF internal links and place our own HTML layer on top.
+                     * This ensures it works 100% on mobile.
+                     */
+                    const overlayDiv = document.createElement('div');
+                    overlayDiv.className = 'manual-overlay';
+                    overlayDiv.style.position = 'absolute';
+                    overlayDiv.style.top = '0';
+                    overlayDiv.style.left = '0';
+                    overlayDiv.style.width = '100%';
+                    overlayDiv.style.height = '100%';
+                    overlayDiv.style.zIndex = '50'; // On top of canvas
+                    div.appendChild(overlayDiv);
 
-                    // Manual Link Extraction (More reliable)
-                    const annotations = await page.getAnnotations();
-                    console.log(`Página ${pageNum}: ${annotations.length} anotaciones encontradas`);
+                    // --- BUTTON 1: LOCATION ---
+                    const btnLocation = document.createElement('a');
+                    btnLocation.href = 'https://maps.app.goo.gl/4hYAJJ7P2VfVS9uR6';
+                    btnLocation.className = 'interactive-btn';
+                    // Estimated Positions (Adjust based on screenshot)
+                    btnLocation.style.top = '31%';
+                    btnLocation.style.left = '18%';
+                    btnLocation.style.width = '28%';
+                    btnLocation.style.height = '16%';
+                    overlayDiv.appendChild(btnLocation);
 
-                    if (annotations.length > 0) {
-                        const countDisplay = document.getElementById('loader');
-                        countDisplay.innerHTML = `<p style="color:green; font-weight:bold;">¡Enlaces detectados!</p><p>Total: ${annotations.length}</p>`;
-                        // Keep it visible for a moment
-                        setTimeout(() => { countDisplay.style.display = 'none'; }, 2000);
-                    }
-
-                    annotations.forEach(annotation => {
-                        // Check for external links or Widgets (buttons)
-                        // Note: Some PDFs stick links in 'Widget' subtype with a parent
-                        const isLink = annotation.subtype === 'Link' && annotation.url;
-
-                        if (isLink) {
-                            const link = document.createElement('a');
-
-                            // Force URL to the provided Map Link
-                            const manualMapUrl = 'https://maps.app.goo.gl/4hYAJJ7P2VfVS9uR6';
-                            link.href = manualMapUrl;
-
-                            // Remove target blank to force navigation in same tab (fixes some mobile blockers)
-                            link.removeAttribute('target');
-
-                            // Convert PDF coordinates
-                            const rect = viewport.convertToViewportRectangle(annotation.rect);
-                            const x = Math.min(rect[0], rect[2]);
-                            const y = Math.min(rect[1], rect[3]);
-                            const width = Math.abs(rect[0] - rect[2]);
-                            const height = Math.abs(rect[1] - rect[3]);
-
-                            link.style.left = `${x}px`;
-                            link.style.top = `${y}px`;
-                            link.style.width = `${width}px`;
-                            link.style.height = `${height}px`;
-
-                            // BLUE BOX FOR DEBUGGING (So we know it's there)
-                            link.style.position = 'absolute';
-                            link.style.display = 'block';
-                            link.style.zIndex = '1000';
-                            link.style.cursor = 'pointer';
-                            link.style.border = '2px solid rgba(0, 0, 255, 0.5)'; // Blue border
-                            link.style.backgroundColor = 'rgba(0, 0, 255, 0.1)'; // Blue tint
-
-                            link.style.webkitTapHighlightColor = 'rgba(0,0,0,0.2)';
-                            link.style.touchAction = 'manipulation';
-
-                            // Aggressive Click Handling
-                            const handleClick = (e) => {
-                                e.preventDefault(); // Stop default anchor behavior
-                                e.stopPropagation();
-
-                                // Show on screen log
-                                const log = document.createElement('div');
-                                log.style.position = 'fixed';
-                                log.style.bottom = '20px';
-                                log.style.left = '50%';
-                                log.style.transform = 'translateX(-50%)';
-                                log.style.background = 'black';
-                                log.style.color = 'white';
-                                log.style.padding = '10px 20px';
-                                log.style.borderRadius = '20px';
-                                log.style.zIndex = '9999';
-                                log.innerText = 'Abriendo Mapa...';
-                                document.body.appendChild(log);
-
-                                // Force location change
-                                setTimeout(() => {
-                                    window.location.href = manualMapUrl;
-                                }, 100);
-                            };
-
-                            link.addEventListener('click', handleClick);
-                            link.addEventListener('touchend', handleClick);
-
-                            annotationDiv.appendChild(link);
+                    // --- BUTTON 2: CONFIRMATION (Placeholder) ---
+                    const btnConfirm = document.createElement('a');
+                    btnConfirm.href = '#'; // NEEDS LINK
+                    btnConfirm.className = 'interactive-btn';
+                    // Estimated Positions
+                    btnConfirm.style.top = '44%';
+                    btnConfirm.style.left = '45%';
+                    btnConfirm.style.width = '28%';
+                    btnConfirm.style.height = '16%';
+                    btnConfirm.onclick = (e) => {
+                        if (btnConfirm.getAttribute('href') === '#') {
+                            e.preventDefault();
+                            alert("Falta el enlace de confirmación");
                         }
-                    });
+                    };
+                    overlayDiv.appendChild(btnConfirm);
                 }
             } catch (error) {
                 console.error('Error:', error);
