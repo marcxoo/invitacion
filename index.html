@@ -174,8 +174,9 @@
                     const btnLocation = document.createElement('a');
                     btnLocation.href = 'https://maps.app.goo.gl/4hYAJJ7P2VfVS9uR6';
                     btnLocation.className = 'interactive-btn';
-                    // New positions based on ruler: ~800px down on a ~1000px height?
-                    btnLocation.style.top = '78%';
+                    // Correction: 31% was high (15 years), 78% was low (Te Espero).
+                    // The buttons are in the middle ~65%.
+                    btnLocation.style.top = '65%';
                     btnLocation.style.left = '18%';
                     btnLocation.style.width = '25%';
                     btnLocation.style.height = '12%';
@@ -185,15 +186,15 @@
                     const btnConfirm = document.createElement('a');
                     btnConfirm.href = '#'; // NEEDS LINK
                     btnConfirm.className = 'interactive-btn';
-                    // Slightly lower and to the right
-                    btnConfirm.style.top = '78%';
+                    // Align with location
+                    btnConfirm.style.top = '65%';
                     btnConfirm.style.left = '52%';
                     btnConfirm.style.width = '25%';
                     btnConfirm.style.height = '12%';
                     btnConfirm.onclick = (e) => {
                         if (btnConfirm.getAttribute('href') === '#') {
                             e.preventDefault();
-                            alert("Falta el enlace de confirmación");
+                            alert("Falta el enlace de confirmación. Por favor envíamelo.");
                         }
                     };
                     overlayDiv.appendChild(btnConfirm);
