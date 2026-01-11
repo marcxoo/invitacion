@@ -174,22 +174,22 @@
                     const btnLocation = document.createElement('a');
                     btnLocation.href = 'https://maps.app.goo.gl/4hYAJJ7P2VfVS9uR6';
                     btnLocation.className = 'interactive-btn';
-                    // Moving down from 65%. 
-                    btnLocation.style.top = '74%';
+                    // Correction: 74% was too low. Moving UP to 66%.
+                    btnLocation.style.top = '66%';
                     btnLocation.style.left = '18%';
                     btnLocation.style.width = '26%';
-                    btnLocation.style.height = '14%';
+                    btnLocation.style.height = '10%'; // Reduced height for precision
                     overlayDiv.appendChild(btnLocation);
 
                     // --- BUTTON 2: CONFIRMATION (Right, Lower) ---
                     const btnConfirm = document.createElement('a');
                     btnConfirm.href = '#';
                     btnConfirm.className = 'interactive-btn';
-                    // This button is significantly lower in the design
-                    btnConfirm.style.top = '84%';
+                    // Correction: 84% was way too low. Moving UP to 75%.
+                    btnConfirm.style.top = '75%';
                     btnConfirm.style.left = '52%';
                     btnConfirm.style.width = '26%';
-                    btnConfirm.style.height = '14%';
+                    btnConfirm.style.height = '10%'; // Reduced height
                     btnConfirm.onclick = (e) => {
                         if (btnConfirm.getAttribute('href') === '#') {
                             e.preventDefault();
