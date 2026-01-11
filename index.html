@@ -170,26 +170,26 @@
                     overlayDiv.style.zIndex = '50'; // On top of canvas
                     div.appendChild(overlayDiv);
 
-                    // --- BUTTON 1: LOCATION ---
+                    // --- BUTTON 1: LOCATION (Left) ---
                     const btnLocation = document.createElement('a');
                     btnLocation.href = 'https://maps.app.goo.gl/4hYAJJ7P2VfVS9uR6';
                     btnLocation.className = 'interactive-btn';
-                    // Estimated Positions (Adjust based on screenshot)
-                    btnLocation.style.top = '31%';
+                    // New positions based on ruler: ~800px down on a ~1000px height?
+                    btnLocation.style.top = '78%';
                     btnLocation.style.left = '18%';
-                    btnLocation.style.width = '28%';
-                    btnLocation.style.height = '16%';
+                    btnLocation.style.width = '25%';
+                    btnLocation.style.height = '12%';
                     overlayDiv.appendChild(btnLocation);
 
-                    // --- BUTTON 2: CONFIRMATION (Placeholder) ---
+                    // --- BUTTON 2: CONFIRMATION (Right) ---
                     const btnConfirm = document.createElement('a');
                     btnConfirm.href = '#'; // NEEDS LINK
                     btnConfirm.className = 'interactive-btn';
-                    // Estimated Positions
-                    btnConfirm.style.top = '44%';
-                    btnConfirm.style.left = '45%';
-                    btnConfirm.style.width = '28%';
-                    btnConfirm.style.height = '16%';
+                    // Slightly lower and to the right
+                    btnConfirm.style.top = '78%';
+                    btnConfirm.style.left = '52%';
+                    btnConfirm.style.width = '25%';
+                    btnConfirm.style.height = '12%';
                     btnConfirm.onclick = (e) => {
                         if (btnConfirm.getAttribute('href') === '#') {
                             e.preventDefault();
