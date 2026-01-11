@@ -176,13 +176,15 @@
                             link.style.width = `${width}px`;
                             link.style.height = `${height}px`;
 
-                            // DEBUG STYLES: Red Box to see them!
+                            // DEBUG STYLES: Invisible again
                             link.style.position = 'absolute';
                             link.style.display = 'block';
-                            link.style.zIndex = '100'; // Very high z-index
-                            link.style.border = '2px solid red'; // VISIBLE BORDER
-                            link.style.backgroundColor = 'rgba(255, 0, 0, 0.3)'; // VISIBLE BACKGROUND
+                            link.style.zIndex = '100';
+                            // link.style.border = '2px solid red'; 
+                            // link.style.backgroundColor = 'rgba(255, 0, 0, 0.3)';
                             link.style.cursor = 'pointer';
+                            // tap highlight color for mobile
+                            link.style.webkitTapHighlightColor = 'rgba(0,0,0,0.1)';
 
                             annotationDiv.appendChild(link);
                         }
