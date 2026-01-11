@@ -101,6 +101,13 @@
 
     <button class="refresh-btn" onclick="fetchCounts()">Actualizar Datos</button>
 
+    <div style="margin-top: 30px; border-top: 1px solid #ddd; padding-top: 20px; width: 100%; max-width: 400px;">
+        <button onclick="requestReset()"
+            style="background: transparent; border: 1px solid #999; color: #777; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-size: 0.8rem;">
+            ⚠ Reiniciar Contadores
+        </button>
+    </div>
+
     <script>
         // Unique Namespace for this event
         const NAMESPACE = 'invitacion_luisana_gm_15_v2';
@@ -127,6 +134,10 @@
 
             document.getElementById('count-yes').innerText = yes;
             document.getElementById('count-no').innerText = no;
+        }
+
+        function requestReset() {
+            alert("⚠️ PROTECCIÓN DE SEGURIDAD\n\nLos contadores no pueden borrarse desde aquí para evitar accidentes durante el evento.\n\nPara realizar el 'Reseteo Final' a 0 antes de enviar las invitaciones, solicita al soporte técnico que actualice la base de datos.");
         }
 
         // Load on start
