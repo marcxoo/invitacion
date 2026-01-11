@@ -268,6 +268,15 @@
 
 
         // --- RSVP LOGIC ---
+        // Check for Magic Reset Link (sent by Admin)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('action') === 'reset') {
+            localStorage.removeItem('voted_luisana_15');
+            // Clean URL and notify
+            window.history.replaceState({}, document.title, window.location.pathname);
+            alert("✅ ¡Dispositivo habilitado de nuevo!\nAhora puedes emitir tu voto correctamente.");
+        }
+
         const NAMESPACE = 'invitacion_luisana_gm_15_final';
         const KEY_YES = 'asistencia_si';
         const KEY_NO = 'asistencia_no';
