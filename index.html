@@ -77,49 +77,41 @@
             left: 0;
             right: 0;
             bottom: 0;
-            /* Soft parchment / cream background */
-            background: #FDFBF7;
+            /* Pure White Background for image blend */
+            background: #ffffff;
             display: flex;
             justify-content: center;
             align-items: center;
             z-index: 1000;
             flex-direction: column;
             font-family: 'Great Vibes', cursive;
-            color: #6A4B5F;
-            /* Vintage plum/mauve text */
+            color: #333;
+            /* Darker text */
         }
 
-        /* Lady Whistledown Cameo Style */
-        .cameo-container {
-            width: 80px;
-            height: 100px;
-            position: relative;
-            margin-bottom: 15px;
-            animation: float 3s ease-in-out infinite;
+        /* User Provided Logo Style */
+        .whistledown-logo {
+            width: 280px;
+            max-width: 85%;
+            height: auto;
+            margin-bottom: 25px;
+            animation: pulse-float 4s ease-in-out infinite;
         }
 
-        .cameo-frame {
-            fill: none;
-            stroke: #D4AF37;
-            /* Gold Frame */
-            stroke-width: 3;
-        }
-
-        .cameo-silhouette {
-            fill: #6A4B5F;
-            /* Plum/Black Silhouette */
-            transform-origin: center;
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0);
+        @keyframes pulse-float {
+            0% {
+                transform: scale(1) translateY(0);
+                filter: brightness(100%);
             }
 
             50% {
-                transform: translateY(-5px);
+                transform: scale(1.03) translateY(-8px);
+                filter: brightness(108%);
+            }
+
+            100% {
+                transform: scale(1) translateY(0);
+                filter: brightness(100%);
             }
         }
 
@@ -132,7 +124,7 @@
 
         @keyframes fadeText {
             from {
-                opacity: 0.6;
+                opacity: 0.5;
             }
 
             to {
@@ -145,35 +137,8 @@
 <body>
 
     <div id="loader">
-        <!-- Lady Profile Silhouette Cameo SVG -->
-        <svg class="cameo-container" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-            <!-- Oval Gold Frame -->
-            <ellipse cx="50" cy="60" rx="40" ry="50" class="cameo-frame" />
-            <ellipse cx="50" cy="60" rx="36" ry="46" fill="#FDFBF7" /> <!-- Inner bg -->
-
-            <!-- Silhouette Path -->
-            <!-- Generic Regency Lady Profile -->
-            <path class="cameo-silhouette" d="
-                M 55,25 
-                C 65,25 72,30 72,42 
-                C 72,48 70,52 68,55
-                C 70,58 72,60 70,68
-                C 68,72 65,75 62,75
-                C 62,75 65,85 60,95
-                C 55,100 40,105 30,105
-                L 25,105
-                C 25,105 30,90 35,80
-                C 30,80 30,70 35,65
-                C 30,60 30,50 35,45
-                C 30,40 35,30 45,28
-                C 40,20 50,15 55,25
-                Z
-            " />
-
-            <!-- Hair bun detail -->
-            <circle cx="68" cy="35" r="8" class="cameo-silhouette" />
-        </svg>
-        <p class="loader-text">Querido lector,<br>su invitación se está preparando...</p>
+        <img src="logo_lady.png" alt="Lady Whistledown's Society Papers" class="whistledown-logo">
+        <p class="loader-text">Su invitación se está preparando...</p>
     </div>
 
     <div id="pdf-wrapper"></div>
