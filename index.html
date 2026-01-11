@@ -267,33 +267,58 @@
         }
 
 
-        // --- RSVP LOGIC ---
-        // Check for Magic Reset Link (sent by Admin)
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('action') === 'reset') {
-            localStorage.removeItem('voted_luisana_15');
-            // Clean URL and notify
-            window.history.replaceState({}, document.title, window.location.pathname);
-            alert("✅ ¡Dispositivo habilitado de nuevo!\nAhora puedes confirmar tu asistencia correctamente.");
-        }
-
+        // Unique Namespace for this event
         const NAMESPACE = 'invitacion_luisana_gm_15_final';
         const KEY_YES = 'asistencia_si';
         const KEY_NO = 'asistencia_no';
+
+        // --- RSVP LOGIC ---
+
+        // Robust Async Reset Logic
+        (async function handleReset() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('action') === 'reset') {
+                const previousVote = localStorage.getItem('voted_luisana_15');
+
+                if (previousVote === KEY_YES || previousVote === KEY_NO) {
+                    // Show immediate feedback
+                    const loader = document.createElement('div');
+                    Object.assign(loader.style, {
+                        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                        background: 'rgba(255,255,255,0.95)', zIndex: 9999,
+                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                        flexDirection: 'column', fontFamily: 'sans-serif'
+                    });
+                    loader.innerHTML = '<div style="font-size: 40px; margin-bottom: 20px;">⏳</div><h3>Eliminando voto anterior...</h3>';
+                    document.body.appendChild(loader);
+
+                    try {
+                        // Await the decrement to ensure it registers
+                        await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${previousVote}/down`);
+                    } catch (e) {
+                        console.error("Error decrementing:", e);
+                        alert("Hubo un error de conexión, pero intentaremos habilitar tu dispositivo.");
+                    }
+
+                    document.body.removeChild(loader);
+                }
+
+                localStorage.removeItem('voted_luisana_15');
+                // Clean URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                alert("✅ ¡Dispositivo habilitado de nuevo!\nAhora puedes confirmar tu asistencia correctamente.");
+            }
+        })();
+
 
         function checkVoted() {
             return localStorage.getItem('voted_luisana_15');
         }
 
-
-
         function showRsvpModal() {
-            if (checkVoted()) {
-                alert("Ya has enviado tu respuesta anteriormente. ¡Gracias!");
-                return;
-            }
+            const currentVote = checkVoted();
 
-            // Create Modal Elements dynamically to avoid cluttering initial HTML
+            // Create Modal Elements dynamically
             const modalOverlay = document.createElement('div');
             modalOverlay.id = 'rsvp-modal-overlay';
             Object.assign(modalOverlay.style, {
@@ -310,22 +335,6 @@
                 boxShadow: '0 10px 25px rgba(0,0,0,0.5)', position: 'relative'
             });
 
-            const title = document.createElement('h2');
-            title.innerText = "¿Nos acompañarás?";
-            title.style.color = '#6A4B5F';
-            title.style.fontSize = '32px';
-            title.style.margin = '0 0 20px 0';
-
-            const btnYes = document.createElement('button');
-            btnYes.innerText = "Sí, asistiré con gusto";
-            styleBtn(btnYes, '#2ecc71');
-            btnYes.onclick = () => submitVote(KEY_YES, "¡Qué alegría! Tu asistencia ha sido confirmada.", modalOverlay);
-
-            const btnNo = document.createElement('button');
-            btnNo.innerText = "Lamentablemente, no asistiré";
-            styleBtn(btnNo, '#e74c3c');
-            btnNo.onclick = () => submitVote(KEY_NO, "Entendemos. Gracias por avisarnos.", modalOverlay);
-
             const closeBtn = document.createElement('div');
             closeBtn.innerText = "✖";
             Object.assign(closeBtn.style, {
@@ -333,11 +342,68 @@
                 cursor: 'pointer', fontFamily: 'sans-serif', color: '#999'
             });
             closeBtn.onclick = () => document.body.removeChild(modalOverlay);
-
             card.appendChild(closeBtn);
-            card.appendChild(title);
-            card.appendChild(btnYes);
-            card.appendChild(btnNo);
+
+            // STATE 1: ALREADY VOTED - SHOW CHANGE OPTION
+            if (currentVote) {
+                const title = document.createElement('h2');
+                title.innerText = "Ya has respondido";
+                title.style.color = '#6A4B5F';
+
+                const status = document.createElement('p');
+                const voteText = currentVote === KEY_YES ? "Sí, asistiré" : "No asistiré";
+                const voteColor = currentVote === KEY_YES ? "#2ecc71" : "#e74c3c";
+                status.innerHTML = `Tu respuesta actual: <br><strong style="color:${voteColor}; font-size: 1.2em;">${voteText}</strong>`;
+                status.style.fontFamily = "'Playfair Display', serif";
+                status.style.margin = "20px 0";
+
+                const btnChange = document.createElement('button');
+                btnChange.innerText = "Cambiar mi respuesta";
+                styleBtn(btnChange, '#95a5a6'); // Grey color
+
+                btnChange.onclick = async () => {
+                    btnChange.innerText = "Procesando...";
+                    btnChange.disabled = true;
+
+                    try {
+                        await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${currentVote}/down`);
+                        localStorage.removeItem('voted_luisana_15');
+                        document.body.removeChild(modalOverlay);
+                        showRsvpModal(); // Re-open fresh
+                    } catch (e) {
+                        alert("Error de conexión. Intenta de nuevo.");
+                        btnChange.innerText = "Cambiar mi respuesta";
+                        btnChange.disabled = false;
+                    }
+                };
+
+                card.appendChild(title);
+                card.appendChild(status);
+                card.appendChild(btnChange);
+            }
+            // STATE 2: FRESH VOTE
+            else {
+                const title = document.createElement('h2');
+                title.innerText = "¿Nos acompañarás?";
+                title.style.color = '#6A4B5F';
+                title.style.fontSize = '32px';
+                title.style.margin = '0 0 20px 0';
+
+                const btnYes = document.createElement('button');
+                btnYes.innerText = "Sí, asistiré con gusto";
+                styleBtn(btnYes, '#2ecc71');
+                btnYes.onclick = () => submitVote(KEY_YES, "¡Qué alegría! Tu asistencia ha sido confirmada.", modalOverlay);
+
+                const btnNo = document.createElement('button');
+                btnNo.innerText = "Lamentablemente, no asistiré";
+                styleBtn(btnNo, '#e74c3c');
+                btnNo.onclick = () => submitVote(KEY_NO, "Entendemos. Gracias por avisarnos.", modalOverlay);
+
+                card.appendChild(title);
+                card.appendChild(btnYes);
+                card.appendChild(btnNo);
+            }
+
             modalOverlay.appendChild(card);
             document.body.appendChild(modalOverlay);
         }
@@ -360,7 +426,7 @@
                 await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${key}/up`);
 
                 // Mark locally
-                localStorage.setItem('voted_luisana_15', 'true');
+                localStorage.setItem('voted_luisana_15', key);
 
                 alert(successMsg);
                 document.body.removeChild(modal);
