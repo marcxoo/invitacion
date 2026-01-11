@@ -132,26 +132,37 @@
                     wrapper.appendChild(div);
 
                     // Dynamic scale based on screen width
-                    // We want the PDF to fit width-wise
                     const screenWidth = window.innerWidth > 800 ? 800 : window.innerWidth;
                     const unscaledViewport = page.getViewport({ scale: 1 });
-                    const scale = screenWidth / unscaledViewport.width;
-                    const viewport = page.getViewport({ scale: scale });
+                    const displayScale = screenWidth / unscaledViewport.width;
+                    const displayViewport = page.getViewport({ scale: displayScale });
 
-                    // Set dimensions
-                    div.style.width = Math.floor(viewport.width) + 'px';
-                    div.style.height = Math.floor(viewport.height) + 'px';
+                    // Set CSS dimensions (layout size)
+                    div.style.width = Math.floor(displayViewport.width) + 'px';
+                    div.style.height = Math.floor(displayViewport.height) + 'px';
 
                     // 1. Render Canvas (The visual part)
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
-                    canvas.height = viewport.height;
-                    canvas.width = viewport.width;
+
+                    // High-DPI Rendering Logic
+                    // We render at a higher resolution than the CSS display size
+                    const outputScale = window.devicePixelRatio || 1;
+                    const renderScale = displayScale * outputScale;
+                    const renderViewport = page.getViewport({ scale: renderScale });
+
+                    canvas.width = Math.floor(renderViewport.width);
+                    canvas.height = Math.floor(renderViewport.height);
+
+                    // Force CSS to stay at display size
+                    canvas.style.width = Math.floor(displayViewport.width) + 'px';
+                    canvas.style.height = Math.floor(displayViewport.height) + 'px';
+
                     div.appendChild(canvas);
 
                     const renderContext = {
                         canvasContext: context,
-                        viewport: viewport
+                        viewport: renderViewport
                     };
                     await page.render(renderContext).promise;
 
