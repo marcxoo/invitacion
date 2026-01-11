@@ -9,84 +9,155 @@
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css">
     <style>
         body,
         html {
             margin: 0;
             padding: 0;
-            background-color: #f0f0f0;
-            /* Optional: smooth background */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            background-color: #333;
             min-height: 100vh;
         }
 
-        #pdf-container {
+        #pdf-wrapper {
             width: 100%;
-            max-width: 600px;
-            /* Limit intent width for desktops so it looks like a mobile app */
-            background: white;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            height: 100vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
-        canvas {
-            display: block;
-            width: 100% !important;
-            /* Force responsive width */
-            height: auto !important;
+        .page-container {
+            position: relative;
+            margin: 10px 0;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        /* Loading spinner */
+        /* Critical for interactivity: layers must match canvas size */
+        .textLayer,
+        .annotationLayer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            line-height: 1.0;
+        }
+
+        /* Make links clickable */
+        .annotationLayer section {
+            cursor: pointer;
+        }
+
         #loader {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-family: sans-serif;
-            color: #666;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div id="loader">Cargando invitación...</div>
-    <div id="pdf-container"></div>
+    <div id="loader">
+        <div class="spinner"></div>
+        <p style="margin-top:20px; font-family:sans-serif;">Cargando invitación...</p>
+    </div>
+
+    <div id="pdf-wrapper"></div>
 
     <script>
         const url = 'inviteeee222__compressed.pdf';
 
-        // Asynchronous download of PDF
-        const loadingTask = pdfjsLib.getDocument(url);
-        loadingTask.promise.then(function (pdf) {
-            document.getElementById('loader').style.display = 'none';
-            const container = document.getElementById('pdf-container');
+        async function renderPDF() {
+            try {
+                const pdf = await pdfjsLib.getDocument(url).promise;
+                document.getElementById('loader').style.display = 'none';
+                const wrapper = document.getElementById('pdf-wrapper');
 
-            // Render all pages
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                pdf.getPage(pageNum).then(function (page) {
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+
+                    // Create container for the page
+                    const div = document.createElement('div');
+                    div.className = 'page-container';
+                    wrapper.appendChild(div);
+
+                    // Dynamic scale based on screen width
+                    // We want the PDF to fit width-wise
+                    const screenWidth = window.innerWidth > 800 ? 800 : window.innerWidth;
+                    const unscaledViewport = page.getViewport({ scale: 1 });
+                    const scale = screenWidth / unscaledViewport.width;
+                    const viewport = page.getViewport({ scale: scale });
+
+                    // Set dimensions
+                    div.style.width = Math.floor(viewport.width) + 'px';
+                    div.style.height = Math.floor(viewport.height) + 'px';
+
+                    // 1. Render Canvas (The visual part)
                     const canvas = document.createElement('canvas');
                     const context = canvas.getContext('2d');
-                    container.appendChild(canvas);
-
-                    // Initial scale to get dimensions
-                    const viewport = page.getViewport({ scale: 2.0 }); // High quality scale
-
                     canvas.height = viewport.height;
                     canvas.width = viewport.width;
+                    div.appendChild(canvas);
 
                     const renderContext = {
                         canvasContext: context,
                         viewport: viewport
                     };
-                    page.render(renderContext);
-                });
+                    await page.render(renderContext).promise;
+
+                    // 2. Render Annotation Layer (The interactions/links)
+                    const annotationDiv = document.createElement('div');
+                    annotationDiv.className = 'annotationLayer';
+                    div.appendChild(annotationDiv);
+
+                    pdfjsLib.AnnotationLayer.render({
+                        viewport: viewport.clone({ dontFlip: true }),
+                        div: annotationDiv,
+                        annotations: await page.getAnnotations(),
+                        page: page,
+                        linkService: null, // Basic links work without full service
+                        renderInteractiveForms: true
+                    });
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loader').innerHTML = '<p>Error al cargar. Intente recargar.</p>';
             }
-        }, function (reason) {
-            console.error(reason);
-            document.getElementById('loader').textContent = "Error al cargar la invitación.";
-        });
+        }
+
+        renderPDF();
     </script>
 </body>
 
