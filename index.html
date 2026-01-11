@@ -170,170 +170,42 @@
                     overlayDiv.style.zIndex = '50'; // On top of canvas
                     div.appendChild(overlayDiv);
 
-                    const debugPanel = document.createElement('div');
-                    debugPanel.style.position = 'fixed';
-                    debugPanel.style.bottom = '0';
-                    debugPanel.style.left = '0';
-                    debugPanel.style.width = '100%';
-                    debugPanel.style.background = 'rgba(0,0,0,0.95)';
-                    debugPanel.style.color = '#fff';
-                    debugPanel.style.padding = '10px';
-                    debugPanel.style.fontFamily = 'monospace';
-                    debugPanel.style.zIndex = '9999';
-                    debugPanel.style.display = 'flex';
-                    debugPanel.style.flexDirection = 'column';
-                    debugPanel.style.gap = '5px';
-
-                    debugPanel.innerHTML = `
-                        <div style="text-align:center; font-size:12px; margin-bottom:5px;">
-                            <strong>MODO EXPERTO</strong>: Toca un círculo para editarlo.<br>
-                            Seleccionado: <span id="sel-id" style="color:yellow;">NINGUNO</span>
-                        </div>
-                        <div style="display:flex; justify-content:space-around; align-items:center;">
-                            <span>Ancho:</span>
-                            <button id="btn-w-dec" style="padding:5px 15px; font-size:20px;">➖</button>
-                            <span id="val-w">--</span>
-                            <button id="btn-w-inc" style="padding:5px 15px; font-size:20px;">➕</button>
-                        </div>
-                        <div style="display:flex; justify-content:space-around; align-items:center;">
-                            <span>Alto:</span>
-                            <button id="btn-h-dec" style="padding:5px 23px; font-size:20px;">➖</button>
-                            <span id="val-h">--</span>
-                            <button id="btn-h-inc" style="padding:5px 23px; font-size:20px;">➕</button>
-                        </div>
-                        <div style="font-size:10px; color:#aaa; text-align:center; margin-top:5px;">
-                            <span id="debug-info">Copia los valores finales.</span>
-                        </div>
-                    `;
-                    document.body.appendChild(debugPanel);
-
-                    let selectedElement = null;
-
-                    function updatePanel() {
-                        if (!selectedElement) {
-                            document.getElementById('sel-id').innerText = "NINGUNO";
-                            document.getElementById('val-w').innerText = "--";
-                            document.getElementById('val-h').innerText = "--";
-                            return;
-                        }
-                        document.getElementById('sel-id').innerText = selectedElement.innerText;
-                        document.getElementById('val-w').innerText = selectedElement.style.width;
-                        document.getElementById('val-h').innerText = selectedElement.style.height;
-
-                        // Update debug info for easy copying
-                        document.getElementById('debug-info').innerText =
-                            `BTN 1: T:${btnLocation.style.top} L:${btnLocation.style.left} W:${btnLocation.style.width} H:${btnLocation.style.height} | ` +
-                            `BTN 2: T:${btnConfirm.style.top} L:${btnConfirm.style.left} W:${btnConfirm.style.width} H:${btnConfirm.style.height}`;
-                    }
-
-                    const adjustSize = (prop, amount) => {
-                        if (!selectedElement) return;
-                        let currentVal = parseFloat(selectedElement.style[prop]);
-                        let newVal = (currentVal + amount).toFixed(1);
-                        if (newVal < 1) newVal = 1;
-                        selectedElement.style[prop] = newVal + '%';
-                        updatePanel();
-                    };
-
-                    document.getElementById('btn-w-inc').onclick = () => adjustSize('width', 1);
-                    document.getElementById('btn-w-dec').onclick = () => adjustSize('width', -1);
-                    document.getElementById('btn-h-inc').onclick = () => adjustSize('height', 1);
-                    document.getElementById('btn-h-dec').onclick = () => adjustSize('height', -1);
-
-                    function makeEditable(element) {
-                        let isDragging = false;
-                        element.style.touchAction = 'none';
-
-                        const select = () => {
-                            // Deselect others
-                            document.querySelectorAll('.interactive-btn').forEach(b => {
-                                b.style.border = 'none';
-                                b.style.backgroundColor = 'rgba(255, 0, 0, 0.4)';
-                            });
-                            // Select this
-                            selectedElement = element;
-                            element.style.border = '3px solid #FFFF00'; // Yellow highlight
-                            element.style.backgroundColor = 'rgba(255, 0, 0, 0.6)';
-                            updatePanel();
-                        }
-
-                        const onMove = (clientX, clientY) => {
-                            if (!isDragging) return;
-                            const containerRect = overlayDiv.getBoundingClientRect();
-                            let left = ((clientX - containerRect.left) / containerRect.width) * 100;
-                            let top = ((clientY - containerRect.top) / containerRect.height) * 100;
-
-                            // Center anchor logic
-                            const w = parseFloat(element.style.width);
-                            const h = parseFloat(element.style.height);
-
-                            element.style.left = (left - w / 2).toFixed(1) + '%';
-                            element.style.top = (top - h / 2).toFixed(1) + '%';
-                            updatePanel();
-                        };
-
-                        element.addEventListener('touchstart', (e) => {
-                            isDragging = true;
-                            select();
-                            e.preventDefault();
-                        }, { passive: false });
-
-                        document.addEventListener('touchmove', (e) => {
-                            if (isDragging) onMove(e.touches[0].clientX, e.touches[0].clientY);
-                        }, { passive: false });
-
-                        document.addEventListener('touchend', () => { isDragging = false; });
-
-                        // Mouse
-                        element.addEventListener('mousedown', (e) => {
-                            isDragging = true;
-                            select();
-                        });
-                        document.addEventListener('mousemove', (e) => {
-                            if (isDragging) onMove(e.clientX, e.clientY);
-                        });
-                        document.addEventListener('mouseup', () => { isDragging = false; });
-                    }
+                    // --- FINAL INTERACTIVE BUTTONS ---
 
                     // --- BUTTON 1: LOCATION ---
-                    const btnLocation = document.createElement('div');
+                    // Coordinates provided by user: T:69.9% L:13.5% W:38% H:8%
+                    const btnLocation = document.createElement('a');
+                    btnLocation.href = 'https://maps.app.goo.gl/4hYAJJ7P2VfVS9uR6';
                     btnLocation.className = 'interactive-btn';
-                    btnLocation.style.top = '71%';
-                    btnLocation.style.left = '18%';
-                    btnLocation.style.width = '25%';
-                    btnLocation.style.height = '14%';
-                    btnLocation.style.backgroundColor = 'rgba(255, 0, 0, 0.4)';
+                    btnLocation.style.top = '69.9%';
+                    btnLocation.style.left = '13.5%';
+                    btnLocation.style.width = '38%';
+                    btnLocation.style.height = '8%';
+                    // Invisible but clickable
+                    btnLocation.style.opacity = '0';
                     btnLocation.style.borderRadius = '50%';
-                    btnLocation.innerText = 'LOCACION';
-                    btnLocation.style.display = 'flex';
-                    btnLocation.style.justifyContent = 'center';
-                    btnLocation.style.alignItems = 'center';
-                    btnLocation.style.color = 'white';
-                    btnLocation.style.fontWeight = 'bold';
-                    btnLocation.style.fontSize = '10px';
                     overlayDiv.appendChild(btnLocation);
 
-                    makeEditable(btnLocation);
-
                     // --- BUTTON 2: CONFIRMATION ---
-                    const btnConfirm = document.createElement('div');
+                    // Coordinates provided by user: T:78.3% L:49.1% W:37% H:8%
+                    const btnConfirm = document.createElement('a');
+                    btnConfirm.href = '#';
                     btnConfirm.className = 'interactive-btn';
-                    btnConfirm.style.top = '80%';
-                    btnConfirm.style.left = '52%';
-                    btnConfirm.style.width = '25%';
-                    btnConfirm.style.height = '14%';
-                    btnConfirm.style.backgroundColor = 'rgba(255, 0, 0, 0.4)';
+                    btnConfirm.style.top = '78.3%';
+                    btnConfirm.style.left = '49.1%';
+                    btnConfirm.style.width = '37%';
+                    btnConfirm.style.height = '8%';
+                    // Invisible but clickable
+                    btnConfirm.style.opacity = '0';
                     btnConfirm.style.borderRadius = '50%';
-                    btnConfirm.innerText = 'CONFIRMAR';
-                    btnConfirm.style.display = 'flex';
-                    btnConfirm.style.justifyContent = 'center';
-                    btnConfirm.style.alignItems = 'center';
-                    btnConfirm.style.color = 'white';
-                    btnConfirm.style.fontWeight = 'bold';
-                    btnConfirm.style.fontSize = '10px';
-                    overlayDiv.appendChild(btnConfirm);
 
-                    makeEditable(btnConfirm);
+                    btnConfirm.onclick = (e) => {
+                        if (btnConfirm.getAttribute('href') === '#') {
+                            e.preventDefault();
+                            alert("Link de confirmación pendiente.");
+                        }
+                    };
+                    overlayDiv.appendChild(btnConfirm);
                 }
             } catch (error) {
                 console.error('Error:', error);
