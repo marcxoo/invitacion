@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lady Whistledown's Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            background-color: #FDFBF7;
+            font-family: 'Playfair Display', serif;
+            color: #333;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-family: 'Great Vibes', cursive;
+            font-size: 3rem;
+            color: #6A4B5F;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid #D4AF37;
+            /* Gold */
+            max-width: 400px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .count {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .yes {
+            color: #2ecc71;
+        }
+
+        .no {
+            color: #e74c3c;
+        }
+
+        .refresh-btn {
+            background: #6A4B5F;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin-top: 20px;
+            font-family: 'Playfair Display', serif;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .refresh-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Society Papers</h1>
+    <p>Reporte de Asistencia</p>
+
+    <div class="card">
+        <div class="stat-row">
+            <span>✅ Confirmados</span>
+            <span id="count-yes" class="count yes">...</span>
+        </div>
+        <div class="stat-row">
+            <span>❌ Declinados</span>
+            <span id="count-no" class="count no">...</span>
+        </div>
+    </div>
+
+    <button class="refresh-btn" onclick="fetchCounts()">Actualizar Datos</button>
+
+    <script>
+        // Unique Namespace for this event
+        const NAMESPACE = 'invitacion_luisana_gm_15';
+        const KEY_YES = 'asistencia_si';
+        const KEY_NO = 'asistencia_no';
+
+        async function fetchCounts() {
+            document.getElementById('count-yes').innerText = '...';
+            document.getElementById('count-no').innerText = '...';
+
+            try {
+                // Fetch YES
+                const resYes = await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${KEY_YES}`);
+                const dataYes = await resYes.json();
+                document.getElementById('count-yes').innerText = dataYes.count || 0;
+
+                // Fetch NO
+                const resNo = await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${KEY_NO}`);
+                const dataNo = await resNo.json();
+                document.getElementById('count-no').innerText = dataNo.count || 0;
+
+            } catch (error) {
+                console.error("Error fetching data", error);
+                alert("Error conectando con los servicios de Lady Whistledown.");
+            }
+        }
+
+        // Load on start
+        fetchCounts();
+    </script>
+</body>
+
+</html>
