@@ -133,36 +133,64 @@
         }
 
         /* AUDIO PLAYER STYLES */
+        /* AUDIO PLAYER STYLES */
         #audio-control {
             position: fixed;
-            top: 20px;
+            top: 100px;
+            /* Default starting pos */
             right: 20px;
             z-index: 900;
-            background: rgba(255, 255, 255, 0.9);
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border: 2px solid #D4AF37;
-            /* Gold */
-            border-radius: 50px;
-            padding: 10px 20px;
+            border-radius: 50%;
+            /* Circle */
             display: none;
             /* Hidden until loaded */
             align-items: center;
-            gap: 10px;
+            justify-content: center;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-family: 'Great Vibes', cursive;
-            font-size: 20px;
-            color: #6A4B5F;
+            cursor: grab;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            /* Improved transition */
+            touch-action: none;
+            /* Prevent scroll while dragging */
         }
 
-        #audio-control:hover {
-            transform: scale(1.05);
-            background: #fff;
+        #audio-control:active {
+            transform: scale(0.95);
+            cursor: grabbing;
+        }
+
+        #audio-control.translucent {
+            opacity: 0.4;
+            /* Translucent state */
+        }
+
+        #audio-control.translucent:hover,
+        #audio-control.translucent:active {
+            opacity: 1;
+            /* Restore on interact */
+        }
+
+        #audio-control.hidden-scroll {
+            transform: translateX(150%) scale(0.5);
+            /* Fly out */
+            opacity: 0 !important;
+            pointer-events: none;
+        }
+
+        #audio-text {
+            display: none;
+            /* Hide text for bubble */
         }
 
         .audio-icon {
-            width: 24px;
-            height: 24px;
+            width: 18px;
+            height: 18px;
             fill: #6A4B5F;
         }
 
@@ -223,7 +251,7 @@
         <svg class="audio-icon" viewBox="0 0 24 24">
             <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
         </svg>
-        <span id="audio-text">Escuchar a Lady W.</span>
+        <span id="audio-text">Escuchar Carta</span>
         <div class="audio-wave">
             <div class="bar"></div>
             <div class="bar"></div>
@@ -686,28 +714,126 @@ Copia estos valores.`;
         // --- AUDIO LOGIC ---
         const audio = document.getElementById('bg-audio');
         const audioControl = document.getElementById('audio-control');
-        const audioText = document.getElementById('audio-text');
+
+        // --- DRAG LOGIC ---
+        let isDragging = false;
+        let hasMoved = false;
+
+        function makeDraggable(el) {
+            let startX, startY, initialLeft, initialTop;
+
+            const onStart = (e) => {
+                // e.preventDefault(); // Don't prevent default immediately to allow click
+                hasMoved = false;
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                startX = clientX;
+                startY = clientY;
+
+                const rect = el.getBoundingClientRect();
+                initialLeft = rect.left;
+                initialTop = rect.top;
+
+                // Clear any preset positioning to allow absolute movement
+                el.style.right = 'auto';
+                el.style.left = initialLeft + 'px';
+                el.style.top = initialTop + 'px';
+
+                document.addEventListener('mousemove', onMove);
+                document.addEventListener('touchmove', onMove, { passive: false });
+                document.addEventListener('mouseup', onEnd);
+                document.addEventListener('touchend', onEnd);
+            };
+
+            const onMove = (e) => {
+                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+
+                if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+                    hasMoved = true;
+                    if (e.cancelable) e.preventDefault(); // Stop scrolling if dragging
+                }
+
+                let newLeft = initialLeft + dx;
+                let newTop = initialTop + dy;
+
+                // Restrict to window bounds
+                const maxLeft = window.innerWidth - el.offsetWidth;
+                const maxTop = window.innerHeight - el.offsetHeight;
+
+                /* Clamp values */
+                if (newLeft < 0) newLeft = 0;
+                if (newLeft > maxLeft) newLeft = maxLeft;
+                if (newTop < 0) newTop = 0;
+                if (newTop > maxTop) newTop = maxTop;
+
+                el.style.left = newLeft + 'px';
+                el.style.top = newTop + 'px';
+            };
+
+            const onEnd = () => {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('touchmove', onMove);
+                document.removeEventListener('mouseup', onEnd);
+                document.removeEventListener('touchend', onEnd);
+            };
+
+            el.addEventListener('mousedown', onStart);
+            el.addEventListener('touchstart', onStart, { passive: false });
+        }
+
+        makeDraggable(audioControl);
+
+        // Click handler (only if not dragged)
+        audioControl.onclick = (e) => {
+            if (hasMoved) {
+                e.preventDefault();
+                return;
+            }
+            toggleAudio();
+        };
 
         function toggleAudio() {
             if (audio.paused) {
                 audio.play().then(() => {
                     audioControl.classList.add('playing');
-                    audioText.innerText = "Escuchando...";
+                    audioControl.classList.add('translucent'); // Go translucent on play
                 }).catch(e => {
                     console.error("Audio playback failed", e);
-                    alert("No se pudo reproducir el audio. Asegúrate de haber tocado la pantalla.");
+                    // alert("Touch required");
                 });
             } else {
                 audio.pause();
                 audioControl.classList.remove('playing');
-                audioText.innerText = "Escuchar a Lady W.";
+                audioControl.classList.remove('translucent'); // Restore visibility
             }
         }
 
         audio.onended = () => {
             audioControl.classList.remove('playing');
-            audioText.innerText = "Volver a escuchar";
+            audioControl.classList.remove('translucent');
         };
+
+        // --- SCROLL LOGIC ---
+        let lastScrollTop = 0;
+        const pdfWrapper = document.getElementById('pdf-wrapper');
+
+        pdfWrapper.addEventListener('scroll', () => {
+            const st = pdfWrapper.scrollTop; // Get scroll from wrapper
+
+            if (st > lastScrollTop && st > 50) { // Reduced threshold
+                // Scrolling Down -> Hide
+                audioControl.classList.add('hidden-scroll');
+            } else {
+                // Scrolling Up -> Show
+                audioControl.classList.remove('hidden-scroll');
+            }
+            lastScrollTop = st <= 0 ? 0 : st;
+        }, false);
 
         renderPDF();
     </script>
