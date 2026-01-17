@@ -228,10 +228,10 @@
                     const btnLocation = document.createElement('a');
                     btnLocation.href = 'https://maps.app.goo.gl/4hYAJJ7P2VfVS9uR6';
                     btnLocation.className = 'interactive-btn';
-                    btnLocation.style.top = '69.9%';
-                    btnLocation.style.left = '13.5%';
-                    btnLocation.style.width = '38%';
-                    btnLocation.style.height = '8%';
+                    btnLocation.style.top = '74.8%';
+                    btnLocation.style.left = '12.6%';
+                    btnLocation.style.width = '40.6%';
+                    btnLocation.style.height = '6.9%';
                     // Invisible but clickable
                     btnLocation.style.opacity = '0';
                     btnLocation.style.borderRadius = '50%';
@@ -242,10 +242,10 @@
                     const btnConfirm = document.createElement('a');
                     btnConfirm.href = '#';
                     btnConfirm.className = 'interactive-btn';
-                    btnConfirm.style.top = '78.3%';
-                    btnConfirm.style.left = '49.1%';
-                    btnConfirm.style.width = '37%';
-                    btnConfirm.style.height = '8%';
+                    btnConfirm.style.top = '82.1%';
+                    btnConfirm.style.left = '48.0%';
+                    btnConfirm.style.width = '38.9%';
+                    btnConfirm.style.height = '6.6%';
                     // Invisible but clickable
                     btnConfirm.style.opacity = '0';
                     btnConfirm.style.borderRadius = '50%';
@@ -257,6 +257,7 @@
                     overlayDiv.appendChild(btnConfirm);
                 }
 
+
                 // Hide loader ONLY after all pages are rendered
                 document.getElementById('loader').style.display = 'none';
 
@@ -264,6 +265,156 @@
                 console.error('Error:', error);
                 document.getElementById('loader').innerHTML = '<p>Error al cargar. Intente recargar.</p>';
             }
+        }
+
+        function enableEditMode() {
+            // Create Debug Panel
+            const panel = document.createElement('div');
+            Object.assign(panel.style, {
+                position: 'fixed', bottom: '10px', right: '10px', width: '300px',
+                background: 'rgba(0,0,0,0.8)', color: '#0f0', padding: '10px',
+                fontFamily: 'monospace', fontSize: '12px', zIndex: 99999,
+                pointerEvents: 'none', whiteSpace: 'pre'
+            });
+            panel.innerHTML = "MODO EDICIÓN ACTIVADO<br>Arrastra y redimensiona (borde inferior/derecho)<br>Haz click en un botón para ver sus datos.";
+            document.body.appendChild(panel);
+
+            const buttons = document.querySelectorAll('.interactive-btn');
+
+            buttons.forEach(btn => {
+                // Ensure visible
+                btn.style.opacity = '0.5';
+                btn.style.border = '2px dashed yellow';
+                btn.style.resize = 'both';
+                btn.style.overflow = 'hidden';
+                btn.innerText = (btn.href.includes('maps') ? '📍 MAPA' : '✅ RSVP');
+                btn.style.color = 'white';
+                btn.style.display = 'flex';
+                btn.style.alignItems = 'center';
+                btn.style.justifyContent = 'center';
+                btn.style.fontWeight = 'bold';
+                btn.style.fontSize = '10px';
+
+                // Draggable logic
+                let isDragging = false;
+                let startX, startY, startLeft, startTop;
+
+                btn.addEventListener('mousedown', (e) => {
+                    // Check if clicking resize handle (bottom-right)
+                    const rect = btn.getBoundingClientRect();
+                    if (e.clientX > rect.right - 10 && e.clientY > rect.bottom - 10) return; // Allow resize
+
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startLeft = parseFloat(btn.style.left) || 0;
+                    startTop = parseFloat(btn.style.top) || 0;
+
+                    // Convert % to px for dragging calculation if needed, 
+                    // but easier to work with computed px then convert back to %
+                    e.preventDefault();
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+
+                    const parent = btn.offsetParent; // The .page-container or overlay
+                    if (!parent) return;
+                    const pRect = parent.getBoundingClientRect();
+
+                    // Calculate delta in pixels
+                    const dx = e.clientX - startX;
+                    const dy = e.clientY - startY;
+
+                    // Current position in pixels
+                    // We need to know the starting px position. 
+                    // Since specific styles are %, let's use offsetLeft/Top
+
+                    // Actually, simpler approach: Update directly
+                    // It's tricky to mix % and px dragging. 
+                    // Let's rely on standard offset logic
+                });
+
+                // SIMPLIFIED DRAG (Mouse down/up handled better with a helper)
+                makeElementDraggable(btn, panel);
+
+                // Monitor Resize
+                new ResizeObserver(() => updatePanel(btn, panel)).observe(btn);
+            });
+        }
+
+        function makeElementDraggable(el, panel) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            el.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                // Ignore if clicking near bottom-right (resize area)
+                const rect = el.getBoundingClientRect();
+                if (e.clientX > rect.right - 20 && e.clientY > rect.bottom - 20) return;
+
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+
+                // Active style
+                el.style.border = '2px solid cyan';
+                updatePanel(el, panel);
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+
+                // Set new position in PX temporarily
+                el.style.top = (el.offsetTop - pos2) + "px";
+                el.style.left = (el.offsetLeft - pos1) + "px";
+
+                updatePanel(el, panel);
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+
+                // Convert final px to %
+                const parent = el.offsetParent;
+                if (parent) {
+                    const lPercent = (el.offsetLeft / parent.offsetWidth) * 100;
+                    const tPercent = (el.offsetTop / parent.offsetHeight) * 100;
+
+                    el.style.left = lPercent.toFixed(1) + "%";
+                    el.style.top = tPercent.toFixed(1) + "%";
+                }
+
+                el.style.border = '2px dashed yellow';
+                updatePanel(el, panel);
+            }
+        }
+
+        function updatePanel(el, panel) {
+            const parent = el.offsetParent;
+            if (!parent) return;
+
+            const l = (el.offsetLeft / parent.offsetWidth) * 100;
+            const t = (el.offsetTop / parent.offsetHeight) * 100;
+            const w = (el.offsetWidth / parent.offsetWidth) * 100;
+            const h = (el.offsetHeight / parent.offsetHeight) * 100;
+
+            const name = el.innerText;
+
+            panel.innerHTML = `<strong>${name}</strong>
+Top: ${t.toFixed(1)}%
+Left: ${l.toFixed(1)}%
+Width: ${w.toFixed(1)}%
+Height: ${h.toFixed(1)}%
+------------------
+Copia estos valores.`;
         }
 
 
