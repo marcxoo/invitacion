@@ -547,6 +547,10 @@ Copia estos valores.`;
         const KEY_YES = 'asistencia_si';
         const KEY_NO = 'asistencia_no';
 
+        // --- SUPABASE CONFIG ---
+        const SUPABASE_URL = 'https://bpibrqhnrtkonukktjni.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJwaWJycWhucnRrb251a2t0am5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg2OTE0MDIsImV4cCI6MjA4NDI2NzQwMn0.a0D2X-6ZfDULYK-uzmjVySBsEeyQaKCthh5vxeAydK4';
+
         // --- RSVP LOGIC ---
 
         // Robust Async Reset Logic
@@ -568,11 +572,10 @@ Copia estos valores.`;
                     document.body.appendChild(loader);
 
                     try {
-                        // Await the decrement to ensure it registers
-                        await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${previousVote}/down`);
+                        // Just wait a bit to simulate work
+                        await new Promise(r => setTimeout(r, 500));
                     } catch (e) {
-                        console.error("Error decrementing:", e);
-                        alert("Hubo un error de conexión, pero intentaremos habilitar tu dispositivo.");
+                        console.error("Error:", e);
                     }
 
                     document.body.removeChild(loader);
@@ -623,25 +626,31 @@ Copia estos valores.`;
             if (currentVote) {
                 const title = document.createElement('h2');
                 title.innerText = "Ya has respondido";
-                title.style.color = '#6A4B5F';
+                Object.assign(title.style, {
+                    color: '#6A4B5F', fontSize: '36px', margin: '0 0 10px 0',
+                    fontFamily: "'Great Vibes', cursive", fontWeight: 'normal'
+                });
 
                 const status = document.createElement('p');
                 const voteText = currentVote === KEY_YES ? "Sí, asistiré" : "No asistiré";
                 const voteColor = currentVote === KEY_YES ? "#2ecc71" : "#e74c3c";
-                status.innerHTML = `Tu respuesta actual: <br><strong style="color:${voteColor}; font-size: 1.2em;">${voteText}</strong>`;
-                status.style.fontFamily = "'Playfair Display', serif";
-                status.style.margin = "20px 0";
+                status.innerHTML = `Tu respuesta actual:<br><span style="color:${voteColor}; font-size: 1.4em; font-weight:bold; display:block; margin-top:5px;">${voteText}</span>`;
+                Object.assign(status.style, {
+                    fontFamily: "'Playfair Display', serif", fontSize: '18px',
+                    margin: "20px 0", color: '#555', lineHeight: '1.4'
+                });
 
                 const btnChange = document.createElement('button');
                 btnChange.innerText = "Cambiar mi respuesta";
-                styleBtn(btnChange, '#95a5a6'); // Grey color
+                // Use Plum color for a more premium look than grey
+                styleBtn(btnChange, '#6A4B5F');
 
                 btnChange.onclick = async () => {
                     btnChange.innerText = "Procesando...";
                     btnChange.disabled = true;
+                    btnChange.style.opacity = 0.7;
 
                     try {
-                        await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${currentVote}/down`);
                         localStorage.removeItem('voted_luisana_15');
                         document.body.removeChild(modalOverlay);
                         showRsvpModal(); // Re-open fresh
@@ -649,6 +658,7 @@ Copia estos valores.`;
                         alert("Error de conexión. Intenta de nuevo.");
                         btnChange.innerText = "Cambiar mi respuesta";
                         btnChange.disabled = false;
+                        btnChange.style.opacity = 1;
                     }
                 };
 
@@ -664,17 +674,77 @@ Copia estos valores.`;
                 title.style.fontSize = '32px';
                 title.style.margin = '0 0 20px 0';
 
+                // --- NAME SECTION ---
+                const labelName = document.createElement('label');
+                labelName.innerText = "Nombre de la Familia / Invitado";
+                Object.assign(labelName.style, {
+                    display: 'block', textAlign: 'left', color: '#6A4B5F',
+                    marginBottom: '5px', fontSize: '14px', fontFamily: "'Playfair Display', serif"
+                });
+
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.id = 'guest-name-input';
+                nameInput.placeholder = 'Ej. Familia Pérez';
+                Object.assign(nameInput.style, {
+                    width: '100%', padding: '10px',
+                    border: '1px solid #D4AF37', borderRadius: '5px',
+                    fontFamily: "'Playfair Display', serif", fontSize: '16px',
+                    boxSizing: 'border-box', marginBottom: '15px'
+                });
+
+                // --- COUNT SECTION ---
+                const countContainer = document.createElement('div');
+                Object.assign(countContainer.style, {
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    marginBottom: '25px', background: '#fff', padding: '10px',
+                    border: '1px dashed #D4AF37', borderRadius: '5px'
+                });
+
+                const labelCount = document.createElement('label');
+                labelCount.innerText = "¿Cuántas personas asistirán?";
+                Object.assign(labelCount.style, {
+                    color: '#333', fontSize: '15px', fontFamily: "'Playfair Display', serif"
+                });
+
+                const countInput = document.createElement('input');
+                countInput.type = 'number';
+                countInput.id = 'guest-count-input';
+                countInput.min = '1';
+                countInput.value = '1';
+                Object.assign(countInput.style, {
+                    width: '60px', padding: '5px', textAlign: 'center',
+                    border: '1px solid #ccc', borderRadius: '4px',
+                    fontSize: '18px', fontWeight: 'bold', color: '#6A4B5F'
+                });
+
+                countContainer.appendChild(labelCount);
+                countContainer.appendChild(countInput);
+
                 const btnYes = document.createElement('button');
                 btnYes.innerText = "Sí, asistiré con gusto";
                 styleBtn(btnYes, '#2ecc71');
-                btnYes.onclick = () => submitVote(KEY_YES, "¡Qué alegría! Tu asistencia ha sido confirmada.", modalOverlay);
+                btnYes.onclick = () => {
+                    const name = nameInput.value.trim();
+                    const count = parseInt(countInput.value) || 1;
+                    if (!name) { alert("Por favor ingresa tu nombre."); return; }
+                    if (count < 1) { alert("El número de personas debe ser al menos 1."); return; }
+                    submitVote(KEY_YES, "¡Qué alegría! Tu asistencia ha sido confirmada.", modalOverlay, name, true, count);
+                };
 
                 const btnNo = document.createElement('button');
                 btnNo.innerText = "Lamentablemente, no asistiré";
                 styleBtn(btnNo, '#e74c3c');
-                btnNo.onclick = () => submitVote(KEY_NO, "Entendemos. Gracias por avisarnos.", modalOverlay);
+                btnNo.onclick = () => {
+                    const name = nameInput.value.trim();
+                    if (!name) { alert("Por favor ingresa tu nombre."); return; }
+                    submitVote(KEY_NO, "Entendemos. Gracias por avisarnos.", modalOverlay, name, false, 1);
+                };
 
                 card.appendChild(title);
+                card.appendChild(labelName);
+                card.appendChild(nameInput);
+                card.appendChild(countContainer);
                 card.appendChild(btnYes);
                 card.appendChild(btnNo);
             }
@@ -691,14 +761,30 @@ Copia estos valores.`;
             });
         }
 
-        async function submitVote(key, successMsg, modal) {
+        async function submitVote(key, successMsg, modal, guestName, asistira, guestCount) {
             // Disable buttons
             const buttons = modal.querySelectorAll('button');
             buttons.forEach(b => { b.disabled = true; b.style.opacity = 0.6; b.innerText = "Enviando..."; });
 
             try {
-                // Hit Counter API (UP)
-                await fetch(`https://api.counterapi.dev/v1/${NAMESPACE}/${key}/up`);
+                // Save to Supabase (Sole Source of Truth)
+                if (guestName) {
+                    const res = await fetch(`${SUPABASE_URL}/rest/v1/rsvp`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({
+                            nombre: guestName,
+                            asistira: asistira,
+                            cantidad: guestCount
+                        })
+                    });
+                    if (!res.ok) throw new Error('Error al guardar en Supabase');
+                }
 
                 // Mark locally
                 localStorage.setItem('voted_luisana_15', key);
@@ -706,6 +792,7 @@ Copia estos valores.`;
                 alert(successMsg);
                 document.body.removeChild(modal);
             } catch (e) {
+                console.error(e);
                 alert("Error de conexión. Inténtalo de nuevo.");
                 buttons.forEach(b => { b.disabled = false; b.style.opacity = 1; b.innerText = "Reintentar"; });
             }
